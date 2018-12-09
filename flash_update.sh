@@ -165,6 +165,7 @@ echo "
 ### DESCRIZIONE
 Questo script permette di installare ed aggiornare adobe flash player per sistemi Linux
 
+### UTILIZZO
 È possibile utilizzare le seguenti opzioni:
 --manual      Controlla la versione upstream e chiede all'utente se installare o aggiornare
 
