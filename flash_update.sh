@@ -155,6 +155,14 @@ fi
 
 givemehelp(){
 echo "
+# flashupdate
+
+# Version:    1.0.0
+# Author:     KeyofBlueS
+# Repository: https://github.com/KeyofBlueS/current-ip
+# License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
+
+### DESCRIZIONE
 Questo script permette di installare ed aggiornare adobe flash player per sistemi Linux
 
 È possibile utilizzare le seguenti opzioni:
