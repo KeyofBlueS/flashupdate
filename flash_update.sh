@@ -153,7 +153,7 @@ exit 0
 fi
 }
 
-help(){
+givemehelp(){
 echo "
 Questo script permette di installare ed aggiornare adobe flash player per sistemi Linux
 
@@ -177,7 +177,7 @@ then
    arch
 elif [ "$1" = "--help" ]
 then
-   help
+   givemehelp
 else
 #   STEP=flash_manual_update
    STEP=flash_updating
