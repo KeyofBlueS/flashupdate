@@ -22,7 +22,7 @@ sudo ln -s /opt/flash-update/flash_update.sh /usr/local/bin/flashupdate
 ### UTILIZZO
 Da terminale digitare:
 ```sh
-flashupdate
+$ flashupdate
 ```
 
 flashupdate controllerà se la versione locale è presente/differrente da quella upstream, in caso positivo installa quella upstream
