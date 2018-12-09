@@ -10,10 +10,13 @@ Questo script permette di installare ed aggiornare adobe flash player per sistem
 
 ### INSTALLAZIONE
 ```sh
+curl -o /tmp/flash_update.sh 'https://raw.githubusercontent.com/KeyofBlueS/flashupdate/master/flash_update.sh'
 sudo mkdir -p /opt/flash-update/
-sudo cp /percorso/dello/script/flash_update.sh /opt/flash-update/flash_update.sh
+sudo mv /tmp/flash_update.sh /opt/flash-update/
+sudo chown root:root /opt/flash-update/flash_update.sh
+sudo chmod 755 /opt/flash-update/flash_update.sh
 sudo chmod +x /opt/flash-update/flash_update.sh
-sudo ln -s /opt/flash-update/current_ip.sh /usr/local/bin/flashupdate
+sudo ln -s /opt/flash-update/flash_update.sh /usr/local/bin/flashupdate
 ```
 
 ### UTILIZZO
