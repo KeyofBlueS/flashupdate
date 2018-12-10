@@ -28,7 +28,7 @@ $ flashupdate
 flashupdate controllerà se la versione locale è presente/differrente da quella upstream, in caso positivo installa quella upstream
 
 È possibile utilizzare le seguenti opzioni:
-```sh
+```
 --manual      Controlla la versione upstream e chiede all'utente se installare o aggiornare
 
 --automatic   Controlla se la versione locale è presente/differrente da quella upstream, in caso positivo installa quella upstream
