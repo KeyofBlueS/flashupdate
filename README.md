@@ -27,6 +27,8 @@ $ flashupdate
 
 flashupdate controllerà se la versione locale è presente/differrente da quella upstream, in caso positivo installa quella upstream
 
+Al primo avvio creerà un avviatore in Applicazioni > Impostazioni > Adobe Flash Player Updater
+
 È possibile utilizzare le seguenti opzioni:
 ```
 --manual      Controlla la versione upstream e chiede all'utente se installare o aggiornare
