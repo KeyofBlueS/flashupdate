@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.0.0
+# Version:    1.0.1
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/current-ip
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -8,7 +8,7 @@
 FLASH_ABOUT_LINK=http://get.adobe.com/flashplayer/about/
 
 arch(){
-uname -a | grep "x86_64"
+uname -a | grep -q "x86_64"
 if [ $? = 0 ]
 then
 echo "L'architettura è 64bit"
@@ -22,7 +22,7 @@ fi
 }
 
 #echo -n "Checking dependencies... "
-for name in fping curl aria2c tar sed grep gawk 
+for name in fping curl aria2c tar sed grep awk 
 do
   [[ $(which $name 2>/dev/null) ]] || { echo -en "\n$name è richiesto da questo script. Utilizza 'sudo apt-get install $name'";deps=1; }
 done
@@ -49,10 +49,10 @@ echo -e "\e[1;34m### Controllo aggiornamenti per Adobe Flash Player $ARCH Linux:
 	cat /usr/lib/flashplugin-nonfree/readme.txt | grep "Version " | cut -d " " -f2
 	echo -e "\e[1;34m## VERSIONE DI ADOBE FLASH PLAYER UPSTREAM:\e[0m"
 	curl -s $FLASH_ABOUT_LINK | grep -A4 "Linux" | grep -A2 "Firefox" | sed -e 's/<[^>][^>]*>//g' -e '/^ *$/d' |  tail -n 1 | awk '{print $1}' |tr -d "\r" > $HOME/.flashplayer-upstream
-	FLASH_UPSTREAM_VERSION=`cat $HOME/.flashplayer-upstream`
+	FLASH_UPSTREAM_VERSION="$(cat $HOME/.flashplayer-upstream)"
 	cat $HOME/.flashplayer-upstream
 	echo "--"
-cat "/usr/lib/flashplugin-nonfree/readme.txt" | grep "$FLASH_UPSTREAM_VERSION"
+cat "/usr/lib/flashplugin-nonfree/readme.txt" | grep -q "$FLASH_UPSTREAM_VERSION"
 if [ $? = 0 ]
 then
 echo -e "\e[1;34m## Adobe Flash Player risulta aggiornato alla versione upstream.\e[0m"
@@ -157,7 +157,7 @@ givemehelp(){
 echo "
 # flashupdate
 
-# Version:    1.0.0
+# Version:    1.0.1
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/current-ip
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
