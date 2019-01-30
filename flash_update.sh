@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.0.1
+# Version:    1.0.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/current-ip
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -8,21 +8,22 @@
 FLASH_ABOUT_LINK=http://get.adobe.com/flashplayer/about/
 
 arch(){
-uname -a | grep -q "x86_64"
-if [ $? = 0 ]
-then
-echo "L'architettura è 64bit"
-ARCH="x86_64"
-flash_check
+UNAME="$(uname -a)"
+if echo $UNAME | grep -q "x86_64"; then
+	echo -e "\e[1;34mL'architettura è 64bit\e[0m"
+	ARCH="x86_64"
+	flash_check
+elif echo $UNAME | grep -q "i686"; then
+	echo -e "\e[1;34mL'architettura è 32bit\e[0m"
+	ARCH="i386"
+	flash_check
 else
-echo "L'architettura è 32bit"
-ARCH="i386"
-flash_check
+	echo -e "\e[1;31mATTENZIONE: Architettura non compatibile con Adobe Flash Player\e[0m"
 fi
 }
 
 #echo -n "Checking dependencies... "
-for name in fping curl aria2c tar sed grep awk 
+for name in curl aria2c tar sed grep awk 
 do
   [[ $(which $name 2>/dev/null) ]] || { echo -en "\n$name è richiesto da questo script. Utilizza 'sudo apt-get install $name'";deps=1; }
 done
@@ -33,19 +34,19 @@ rm -f $HOME/.flashplayer-upstream
 flash_check(){
 while true
 do
-  fping -r0 -t 3000 get.adobe.com | grep "alive"
+  curl -s get.adobe.com > /dev/null
   if [ $? = 0 ]; then
 	break
   fi
 	echo -e "\e[1;34m
-get.adobe.com è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
-	echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
+get.adobe.com è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile
+Premi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
   if read -t 1 _e; then
         exit 0
   fi
 	done
-echo -e "\e[1;34m### Controllo aggiornamenti per Adobe Flash Player $ARCH Linux:\e[0m"
-	echo -e "\e[1;34m## VERSIONE DI ADOBE FLASH PLAYER ATTUALMENTE INSTALLATA:\e[0m"
+echo -e "\e[1;34m### Controllo aggiornamenti per Adobe Flash Player $ARCH Linux:
+## VERSIONE DI ADOBE FLASH PLAYER ATTUALMENTE INSTALLATA:\e[0m"
 	cat /usr/lib/flashplugin-nonfree/readme.txt | grep "Version " | cut -d " " -f2
 	echo -e "\e[1;34m## VERSIONE DI ADOBE FLASH PLAYER UPSTREAM:\e[0m"
 	curl -s $FLASH_ABOUT_LINK | grep -A4 "Linux" | grep -A2 "Firefox" | sed -e 's/<[^>][^>]*>//g' -e '/^ *$/d' |  tail -n 1 | awk '{print $1}' |tr -d "\r" > $HOME/.flashplayer-upstream
@@ -101,13 +102,13 @@ flash_updating(){
 	cd flashtmp
 while true
 do
-  fping -r0 -t 3000 fpdownload.adobe.com | grep "alive"
+  curl -s fpdownload.adobe.com > /dev/null
   if [ $? = 0 ]; then
 	break
   fi
 	echo -e "\e[1;34m
-fpdownload.adobe.com è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile\e[0m"
-	echo -e "\e[1;31mPremi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
+fpdownload.adobe.com è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile
+Premi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
   if read -t 1 _e; then
         exit 0
   fi
@@ -157,7 +158,7 @@ givemehelp(){
 echo "
 # flashupdate
 
-# Version:    1.0.1
+# Version:    1.0.2
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/current-ip
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
