@@ -1,26 +1,23 @@
 #!/bin/bash
 
-# Version:    1.0.2
+# Version:    1.1.0
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/current-ip
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
 
 FLASH_ABOUT_LINK=http://get.adobe.com/flashplayer/about/
 
-arch(){
 UNAME="$(uname -a)"
 if echo $UNAME | grep -q "x86_64"; then
 	echo -e "\e[1;34mL'architettura è 64bit\e[0m"
 	ARCH="x86_64"
-	flash_check
 elif echo $UNAME | grep -q "i686"; then
 	echo -e "\e[1;34mL'architettura è 32bit\e[0m"
 	ARCH="i386"
-	flash_check
 else
-	echo -e "\e[1;31mATTENZIONE: Architettura non compatibile con Adobe Flash Player\e[0m"
+	echo -e "\e[1;31mATTENZIONE: Architettura non compatibile con Adobe Flash Player!\e[0m"
+	exit 1
 fi
-}
 
 #echo -n "Checking dependencies... "
 for name in curl aria2c tar sed grep awk 
@@ -29,46 +26,41 @@ do
 done
 [[ $deps -ne 1 ]] && echo "" || { echo -en "\nInstalla le dipendenze necessarie e riavvia questo script\n";exit 1; }
 
-rm -f $HOME/.flashplayer-upstream
-
 flash_check(){
 while true
 do
-  curl -s get.adobe.com > /dev/null
-  if [ $? = 0 ]; then
+if curl -s get.adobe.com > /dev/null; then
 	break
-  fi
+else
 	echo -e "\e[1;34m
 get.adobe.com è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile
 Premi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
-  if read -t 1 _e; then
-        exit 0
-  fi
-	done
+	if read -t 1 _e; then
+		exit 0
+	fi
+fi
+done
 echo -e "\e[1;34m### Controllo aggiornamenti per Adobe Flash Player $ARCH Linux:
 ## VERSIONE DI ADOBE FLASH PLAYER ATTUALMENTE INSTALLATA:\e[0m"
-	cat /usr/lib/flashplugin-nonfree/readme.txt | grep "Version " | cut -d " " -f2
-	echo -e "\e[1;34m## VERSIONE DI ADOBE FLASH PLAYER UPSTREAM:\e[0m"
-	curl -s $FLASH_ABOUT_LINK | grep -A4 "Linux" | grep -A2 "Firefox" | sed -e 's/<[^>][^>]*>//g' -e '/^ *$/d' |  tail -n 1 | awk '{print $1}' |tr -d "\r" > $HOME/.flashplayer-upstream
-	FLASH_UPSTREAM_VERSION="$(cat $HOME/.flashplayer-upstream)"
-	cat $HOME/.flashplayer-upstream
-	echo "--"
-cat "/usr/lib/flashplugin-nonfree/readme.txt" | grep -q "$FLASH_UPSTREAM_VERSION"
-if [ $? = 0 ]
-then
-echo -e "\e[1;34m## Adobe Flash Player risulta aggiornato alla versione upstream.\e[0m"
-QUESTION="Vuoi forzare l'aggiornamento?"
-#exit 0
-menu
+cat /usr/lib/flashplugin-nonfree/readme.txt | grep "Version " | cut -d " " -f2
+echo -e "\e[1;34m## VERSIONE DI ADOBE FLASH PLAYER UPSTREAM:\e[0m"
+FLASH_UPSTREAM_VERSION="$(curl -s $FLASH_ABOUT_LINK | grep -A4 "Linux" | grep -A2 "Firefox" | sed -e 's/<[^>][^>]*>//g' -e '/^ *$/d' |  tail -n 1 | awk '{print $1}' |tr -d "\r")"
+echo $FLASH_UPSTREAM_VERSION
+echo "--"
+if cat "/usr/lib/flashplugin-nonfree/readme.txt" | grep -q "$FLASH_UPSTREAM_VERSION"; then
+	echo -e "\e[1;34m## Adobe Flash Player risulta aggiornato alla versione upstream.\e[0m"
+	QUESTION="Vuoi forzare l'aggiornamento?"
+	#exit 0
+	menu
 else
-echo -e "\e[1;34m## Adobe Flash Player non risulta aggiornato alla versione upstream.\e[0m"
-QUESTION="Vuoi procedere con l'aggiornamento?"
-$STEP
+	echo -e "\e[1;34m## Adobe Flash Player non risulta aggiornato alla versione upstream.\e[0m"
+	QUESTION="Vuoi procedere con l'aggiornamento?"
+	$STEP
 fi
 }
 
 menu(){
-echo -e "\e[1;31m$QUESTION
+echo -e "\e[1;35m$QUESTION
 (A)ggiorna
 (E)sci\e[0m"
 read -p "Scelta (A/E): " testo
@@ -76,71 +68,69 @@ read -p "Scelta (A/E): " testo
 case $testo in
     A|a)
 	{
-  echo -e "\e[1;34m
+	echo -e "\e[1;34m
 ## HAI SCELTO DI AGGIORNARE ADOBE FLASH PLAYER\e[0m"
 	flash_updating
 	}
     ;;
     E|e|"")
 	{
-			rm -f $HOME/.flashplayer-upstream
-			echo -e "\e[1;34mEsco dal programma\e[0m"
-			desktopfile
+	echo -e "\e[1;34mEsco dal programma\e[0m"
+	desktopfile
 	}
     ;;
     *)
-echo -e "\e[1;31m## HAI SBAGLIATO TASTO.......cerca di stare un po' attento\e[0m"
-    flash_manual_update
+	echo -e "\e[1;31m## HAI SBAGLIATO TASTO.......cerca di stare un po' attento\e[0m"
+	flash_manual_update
     ;;
 esac
 }
 
 flash_updating(){
-	echo "--"
-	echo -e "\e[1;34m## Scaricamento versione upstream\e[0m"
-	mkdir flashtmp
-	cd flashtmp
+echo "--"
+echo -e "\e[1;34m## Scaricamento versione upstream\e[0m"
+mkdir flashtmp
+cd flashtmp
 while true
 do
-  curl -s fpdownload.adobe.com > /dev/null
-  if [ $? = 0 ]; then
+if curl -s fpdownload.adobe.com > /dev/null; then
 	break
-  fi
+else
 	echo -e "\e[1;34m
 fpdownload.adobe.com è\e[0m" "\e[1;31mOFFLINE o rete non raggiungibile
 Premi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
-  if read -t 1 _e; then
-        exit 0
-  fi
-	done
-	aria2c https://fpdownload.adobe.com/get/flashplayer/pdc/$FLASH_UPSTREAM_VERSION/flash_player_npapi_linux."$ARCH".tar.gz
-	echo -e "\e[1;34m## Installazione\e[0m"
-	tar -zxvf *.tar.gz
-	sudo mkdir -p /usr/lib/flashplugin-nonfree/
-	sudo mkdir -p /etc/alternatives/
-	sudo mkdir -p /usr/lib/mozilla/plugins/
-	sudo cp -R ./usr/* /usr/
-	sudo cp ./libflashplayer.so /usr/lib/flashplugin-nonfree/
-	sudo cp ./readme.txt /usr/lib/flashplugin-nonfree/
-	sudo ln -s -f /usr/lib/flashplugin-nonfree/libflashplayer.so /etc/alternatives/flash-mozilla.so
-	sudo ln -s -f /etc/alternatives/flash-mozilla.so /usr/lib/mozilla/plugins/flash-mozilla.so
-	sudo chmod 644 /usr/lib/flashplugin-nonfree/libflashplayer.so
-	sudo chown root:root /usr/lib/flashplugin-nonfree/libflashplayer.so
-	rm -Rf $HOME/.adobe/ 2> /dev/null
-	rm -Rf $HOME/.macromedia/  2> /dev/null
-	cd ..
-	rm -rf ./flashtmp
-	rm -f $HOME/.flashplayer-upstream
-	flash_check
+	if read -t 1 _e; then
+	exit 0
+	fi
+fi
+done
+aria2c https://fpdownload.adobe.com/get/flashplayer/pdc/$FLASH_UPSTREAM_VERSION/flash_player_npapi_linux."$ARCH".tar.gz
+echo -e "\e[1;34m## Installazione\e[0m"
+tar -zxvf *.tar.gz
+sudo mkdir -p /usr/lib/flashplugin-nonfree/
+sudo mkdir -p /etc/alternatives/
+sudo mkdir -p /usr/lib/mozilla/plugins/
+sudo cp -R ./usr/* /usr/
+sudo cp ./libflashplayer.so /usr/lib/flashplugin-nonfree/
+sudo cp ./readme.txt /usr/lib/flashplugin-nonfree/
+sudo ln -s -f /usr/lib/flashplugin-nonfree/libflashplayer.so /etc/alternatives/flash-mozilla.so
+sudo ln -s -f /etc/alternatives/flash-mozilla.so /usr/lib/mozilla/plugins/flash-mozilla.so
+sudo chmod 644 /usr/lib/flashplugin-nonfree/libflashplayer.so
+sudo chown root:root /usr/lib/flashplugin-nonfree/libflashplayer.so
+rm -Rf $HOME/.adobe/ 2> /dev/null
+rm -Rf $HOME/.macromedia/  2> /dev/null
+cd ..
+rm -rf ./flashtmp
+#rm -f $HOME/.flashplayer-upstream
+flash_check
 }
 
 desktopfile(){
-if [ -e /usr/local/share/applications/flashupdate.desktop ]
-then
-exit 0
+if [ -e /usr/local/share/applications/flashupdate.desktop ]; then
+	exit 0
 else
-echo -e "\e[1;34m## Creating flashupdate.desktop file\e[0m"
-sudo sh -c 'echo "
+	echo -e "\e[1;34m## Creating flashupdate.desktop file\e[0m"
+	sudo sh -c 'echo "
 [Desktop Entry]
 Name=Adobe Flash Player Updater
 Exec=flashupdate
@@ -150,7 +140,7 @@ Type=Application
 StartupNotify=true
 Categories=Settings;GNOME;GTK;X-GNOME-PersonalSettings;
 NotShowIn=KDE;" > /usr/local/share/applications/flashupdate.desktop'
-exit 0
+	exit 0
 fi
 }
 
@@ -158,7 +148,7 @@ givemehelp(){
 echo "
 # flashupdate
 
-# Version:    1.0.2
+# Version:    1.1.0
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/current-ip
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -177,19 +167,16 @@ Questo script permette di installare ed aggiornare adobe flash player per sistem
 exit 0
 }
 
-if [ "$1" = "--manual" ]
-then
-   STEP=menu
-   arch
-elif [ "$1" = "--automatic" ]
-then
-   STEP=flash_updating
-   arch
-elif [ "$1" = "--help" ]
-then
-   givemehelp
+if [ "$1" = "--manual" ]; then
+	STEP=menu
+	flash_check
+elif [ "$1" = "--automatic" ]; then
+	STEP=flash_updating
+	flash_check
+elif [ "$1" = "--help" ]; then
+	givemehelp
 else
-#   STEP=flash_manual_update
-   STEP=flash_updating
-   arch
+#	STEP=flash_manual_update
+	STEP=flash_updating
+	flash_check
 fi
