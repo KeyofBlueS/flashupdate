@@ -1,9 +1,27 @@
 #!/bin/bash
 
-# Version:    1.1.0
+# Version:    1.1.1
 # Author:     KeyofBlueS
-# Repository: https://github.com/KeyofBlueS/current-ip
+# Repository: https://github.com/KeyofBlueS/flashupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
+
+if curl -s github.com > /dev/null; then
+	UPSTREAM_VERSION="$(timeout -s SIGTERM 15 curl -L "https://raw.githubusercontent.com/KeyofBlueS/flashupdate/master/flash_update.sh" 2> /dev/null | grep "# Version:" | head -n 1)"
+	LOCAL_VERSION="$(cat "${0}" | grep "# Version:" | head -n 1)"
+	REPOSITORYLINK="$(cat "${0}" | grep "# Repository:" | head -n 1)"
+	if echo $LOCAL_VERSION | grep -q "$UPSTREAM_VERSION"; then
+		echo -n
+	else
+		echo -e "\e[1;33m-----------------------------------------------------------------------------------	
+## ATTENZIONE: questo script non risulta aggiornato alla versione upstream, visita:
+\e[1;32m$REPOSITORYLINK
+
+\e[1;33m$LOCAL_VERSION (locale)
+\e[1;32m$UPSTREAM_VERSION (upstream)
+\e[1;33m-----------------------------------------------------------------------------------
+\e[0m"
+	fi
+fi
 
 FLASH_ABOUT_LINK=http://get.adobe.com/flashplayer/about/
 
@@ -148,9 +166,9 @@ givemehelp(){
 echo "
 # flashupdate
 
-# Version:    1.1.0
+# Version:    1.1.1
 # Author:     KeyofBlueS
-# Repository: https://github.com/KeyofBlueS/current-ip
+# Repository: https://github.com/KeyofBlueS/flashupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
 
 ### DESCRIZIONE
