@@ -1,25 +1,57 @@
 #!/bin/bash
 
-# Version:    1.1.2
+# Version:    1.1.4
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/flashupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
 
 if curl -s github.com > /dev/null; then
-	UPSTREAM_VERSION="$(timeout -s SIGTERM 15 curl -L "https://raw.githubusercontent.com/KeyofBlueS/flashupdate/master/flash_update.sh" 2> /dev/null | grep "# Version:" | head -n 1)"
+	SCRIPT_LINK="https://raw.githubusercontent.com/KeyofBlueS/flashupdate/master/flash_update.sh"
+	UPSTREAM_VERSION="$(timeout -s SIGTERM 15 curl -L "$SCRIPT_LINK" 2> /dev/null | grep "# Version:" | head -n 1)"
 	LOCAL_VERSION="$(cat "${0}" | grep "# Version:" | head -n 1)"
-	REPOSITORYLINK="$(cat "${0}" | grep "# Repository:" | head -n 1)"
+	REPOSITORY_LINK="$(cat "${0}" | grep "# Repository:" | head -n 1)"
 	if echo "$LOCAL_VERSION" | grep -q "$UPSTREAM_VERSION"; then
 		echo -n
 	else
 		echo -e "\e[1;33m-----------------------------------------------------------------------------------	
 ## ATTENZIONE: questo script non risulta aggiornato alla versione upstream, visita:
-\e[1;32m$REPOSITORYLINK
+\e[1;32m$REPOSITORY_LINK
 
 \e[1;33m$LOCAL_VERSION (locale)
 \e[1;32m$UPSTREAM_VERSION (upstream)
 \e[1;33m-----------------------------------------------------------------------------------
+
+\e[1;35mPremi invio per aggiornare questo script o attendi 10 secondi per andare avanti normalmente
+\e[1;31m## ATTENZIONE: eventuali modifiche effettuate a questo script verranno perse!!!
+\e[0m
+"
+		if read -t 10 _e; then
+			echo -e "\e[1;34m	Aggiorno questo script...\e[0m"
+			if [[ -L "${0}" ]]; then
+				scriptpath="$(readlink -f "${0}")"
+			else
+				scriptpath="${0}"
+			fi
+			if [ -z "${scriptfolder}" ]; then
+				scriptfolder="${scriptpath}"
+				if ! [[ "${scriptpath}" =~ ^/.*$ ]]; then
+					if ! [[ "${scriptpath}" =~ ^.*/.*$ ]]; then
+					scriptfolder="./"
+					fi
+				fi
+				scriptfolder="${scriptfolder%/*}/"
+				scriptname="${scriptpath##*/}"
+			fi
+			if timeout -s SIGTERM 15 curl -s -o /tmp/"${scriptname}" "$SCRIPT_LINK"; then
+				sudo mv /tmp/flash_update.sh "${scriptfolder}"
+				sudo chown root:root "${scriptfolder}${scriptname}" > /dev/null 2>&1
+				sudo chmod 755 "${scriptfolder}${scriptname}" > /dev/null 2>&1
+				sudo chmod +x "${scriptfolder}${scriptname}" > /dev/null 2>&1
+				echo -e "\e[1;34m	Fatto!
 \e[0m"
+				exec "${scriptfolder}${scriptname}"
+			fi
+		fi
 	fi
 fi
 
@@ -166,7 +198,7 @@ givemehelp(){
 echo "
 # flashupdate
 
-# Version:    1.1.2
+# Version:    1.1.4
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/flashupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
