@@ -1,6 +1,6 @@
 # flashupdate
 
-# Version:    1.1.6
+# Version:    1.1.7
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/flashupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
