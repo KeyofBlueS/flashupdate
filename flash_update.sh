@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Version:    1.1.7
+# Version:    1.1.8
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/flashupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
@@ -57,7 +57,18 @@ if curl -s github.com > /dev/null; then
 					chmod 755 "${scriptfolder}${scriptname}" > /dev/null 2>&1
 					chmod +x "${scriptfolder}${scriptname}" > /dev/null 2>&1
 				elif which sudo > /dev/null 2>&1; then
+					while true
+					do
 					echo -e "\e[1;33mPer proseguire con l'aggiornamento occorre concedere i permessi di amministratore\e[0m"
+					if sudo -v; then
+						break
+					else
+						echo -e "\e[1;31mPermesso negato! Premi invio per uscire o attendi 5 secondi per riprovare\e[0m"
+						if read -t 5 _e; then
+							exit 1
+						fi
+					fi
+					done
 					sudo mv /tmp/"${scriptname}" "${scriptfolder}"
 					sudo chown root:root "${scriptfolder}${scriptname}" > /dev/null 2>&1
 					sudo chmod 755 "${scriptfolder}${scriptname}" > /dev/null 2>&1
@@ -100,11 +111,29 @@ else
 fi
 
 #echo -n "Checking dependencies... "
-for name in curl aria2c tar sed grep awk 
+for name in awk aria2c curl grep sed tar
 do
-  [[ $(which $name 2>/dev/null) ]] || { echo -en "\n$name è richiesto da questo script. Utilizza 'sudo apt-get install $name'";deps=1; }
+if which $name > /dev/null; then
+	echo -n
+else
+	if echo $name | grep -xq "awk"; then
+		name="gawk"
+	fi
+	if echo $name | grep -xq "aria2c"; then
+		name="aria2"
+	fi
+	if [ -z "${missing}" ]; then
+		missing="$name"
+	else
+		missing="$missing $name"
+	fi
+fi
 done
-[[ $deps -ne 1 ]] && echo "" || { echo -en "\nInstalla le dipendenze necessarie e riavvia questo script\n";exit 1; }
+if ! [ -z "${missing}" ]; then
+	echo -e "\e[1;31mQuesto script dipende da \e[1;34m$missing\e[1;31m. Utilizza \e[1;34msudo apt-get install $missing
+\e[1;31mInstalla le dipendenze necessarie e riavvia questo script.\e[0m"
+	exit 1
+fi
 
 flash_check(){
 while true
@@ -122,11 +151,11 @@ fi
 done
 echo -e "\e[1;34m### Controllo aggiornamenti per Adobe Flash Player $ARCH Linux:
 ## VERSIONE DI ADOBE FLASH PLAYER ATTUALMENTE INSTALLATA:\e[0m"
-cat /usr/lib/flashplugin-nonfree/readme.txt | grep "Version " | cut -d " " -f2
+cat /usr/lib/flashplugin-nonfree/readme.txt | grep "Version " | awk '{print $2}'
 echo -e "\e[1;34m## VERSIONE DI ADOBE FLASH PLAYER UPSTREAM:\e[0m"
-FLASH_UPSTREAM_VERSION="$(curl -s $FLASH_ABOUT_LINK | grep -A4 "Linux" | grep -A2 "Firefox" | sed -e 's/<[^>][^>]*>//g' -e '/^ *$/d' |  tail -n 1 | awk '{print $1}' |tr -d "\r")"
-echo $FLASH_UPSTREAM_VERSION
-echo "--"
+FLASH_UPSTREAM_VERSION="$(curl -s $FLASH_ABOUT_LINK | grep -A4 "Linux" | grep -A2 "Firefox" | sed -e 's/<[^>][^>]*>//g' -e '/^ *$/d' | tail -n 1 | awk '{print $1}' | tr -d "\r")"
+echo "$FLASH_UPSTREAM_VERSION
+--"
 if cat "/usr/lib/flashplugin-nonfree/readme.txt" | grep -q "$FLASH_UPSTREAM_VERSION"; then
 	echo -e "\e[1;34m## Adobe Flash Player risulta aggiornato alla versione upstream.\e[0m"
 	QUESTION="Vuoi forzare l'aggiornamento?"
@@ -167,10 +196,8 @@ esac
 }
 
 flash_updating(){
-echo "--"
-echo -e "\e[1;34m## Scaricamento versione upstream\e[0m"
-mkdir flashtmp
-cd flashtmp
+echo -e "\e[0;32m--
+\e[1;34m## Scaricamento versione upstream\e[0m"
 while true
 do
 if curl -s fpdownload.adobe.com > /dev/null; then
@@ -184,25 +211,35 @@ Premi INVIO per uscire, o attendi 1 secondo per riprovare\e[0m"
 	fi
 fi
 done
-aria2c https://fpdownload.adobe.com/get/flashplayer/pdc/$FLASH_UPSTREAM_VERSION/flash_player_npapi_linux."$ARCH".tar.gz
+aria2c -d /tmp/flashtmp https://fpdownload.adobe.com/get/flashplayer/pdc/$FLASH_UPSTREAM_VERSION/flash_player_npapi_linux."$ARCH".tar.gz
 echo -e "\e[1;34m## Installazione\e[0m"
-tar -zxvf *.tar.gz
+tar -C /tmp/flashtmp/ -zxvf /tmp/flashtmp/flash_player_npapi_linux."$ARCH".tar.gz
+while true
+do
 echo -e "\e[1;33mPer proseguire con l'aggiornamento occorre concedere i permessi di amministratore\e[0m"
+if sudo -v; then
+	break
+else
+	echo -e "\e[1;31mPermesso negato! Premi invio per uscire o attendi 5 secondi per riprovare\e[0m"
+	if read -t 5 _e; then
+		rm -rf /tmp/flashtmp 2> /dev/null
+		exit 1
+	fi
+fi
+done
 sudo mkdir -p /usr/lib/flashplugin-nonfree/
 sudo mkdir -p /etc/alternatives/
 sudo mkdir -p /usr/lib/mozilla/plugins/
-sudo cp -R ./usr/* /usr/
-sudo cp ./libflashplayer.so /usr/lib/flashplugin-nonfree/
-sudo cp ./readme.txt /usr/lib/flashplugin-nonfree/
+sudo cp -R /tmp/flashtmp/usr/* /usr/
+sudo cp /tmp/flashtmp/libflashplayer.so /usr/lib/flashplugin-nonfree/
+sudo cp /tmp/flashtmp/readme.txt /usr/lib/flashplugin-nonfree/
 sudo ln -s -f /usr/lib/flashplugin-nonfree/libflashplayer.so /etc/alternatives/flash-mozilla.so
 sudo ln -s -f /etc/alternatives/flash-mozilla.so /usr/lib/mozilla/plugins/flash-mozilla.so
 sudo chmod 644 /usr/lib/flashplugin-nonfree/libflashplayer.so
 sudo chown root:root /usr/lib/flashplugin-nonfree/libflashplayer.so
 rm -Rf $HOME/.adobe/ 2> /dev/null
-rm -Rf $HOME/.macromedia/  2> /dev/null
-cd ..
-rm -rf ./flashtmp
-#rm -f $HOME/.flashplayer-upstream
+rm -Rf $HOME/.macromedia/ 2> /dev/null
+rm -rf /tmp/flashtmp 2> /dev/null
 flash_check
 }
 
@@ -210,8 +247,19 @@ desktopfile(){
 if [ -e /usr/local/share/applications/flashupdate.desktop ]; then
 	exit 0
 else
-	echo -e "\e[1;34m## Creating flashupdate.desktop file\e[0m"
-	echo -e "\e[1;33mPer proseguire occorre concedere i permessi di amministratore\e[0m"
+	while true
+	do
+	echo -e "\e[1;34m## Creating flashupdate.desktop file
+\e[1;33mPer proseguire occorre concedere i permessi di amministratore\e[0m"
+		if sudo -v; then
+			break
+		else
+			echo -e "\e[1;31mPermesso negato! Premi invio per uscire o attendi 5 secondi per riprovare\e[0m"
+			if read -t 5 _e; then
+				exit 1
+			fi
+		fi
+	done
 	sudo sh -c 'echo "
 [Desktop Entry]
 Name=Adobe Flash Player Updater
@@ -230,7 +278,7 @@ givemehelp(){
 echo "
 # flashupdate
 
-# Version:    1.1.7
+# Version:    1.1.8
 # Author:     KeyofBlueS
 # Repository: https://github.com/KeyofBlueS/flashupdate
 # License:    GNU General Public License v3.0, https://opensource.org/licenses/GPL-3.0
